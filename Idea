@@ -1,0 +1,157 @@
+do {
+
+retire(); // Retire up to WIDTH consecutive “ready” instructions from the head of
+
+// the ROB.
+
+writeback(); // Process the writeback bundle in WB: For each instruction in WB, mark
+
+// the instruction as “ready” in its entry in the ROB.
+
+execute(); // From the execute_list, check for instructions that are finishing
+
+// execution this cycle, and:
+
+// 1) Remove the instruction from the execute_list.
+
+// 2) Add the instruction to WB.
+
+// 3) Wakeup dependent instructions (set their source operand ready
+
+// flags) in the IQ, DI (dispatch bundle), and RR (the register-read
+
+// bundle).
+
+issue(); // Issue up to WIDTH oldest instructions from the IQ. (One approach to
+
+// implement oldest-first issuing is to make multiple passes through
+
+// the IQ, each time finding the next oldest ready instruction and then
+
+// issuing it. One way to annotate the age of an instruction is to
+
+// assign an incrementing sequence number to each instruction as it is
+
+// fetched from the trace file.)
+
+// To issue an instruction:
+
+// 1) Remove the instruction from the IQ.
+
+// 2) Add the instruction to the execute_list. Set a timer for
+
+// the instruction in the execute_list that will allow you to
+
+// model its execution latency.
+
+dispatch(); // If DI contains a dispatch bundle:
+
+// It `the number of free IQ entries is less than the size of the
+
+// dispatch bundle in DI, then do nothing. If the number of free IQ
+
+// entries is greater than or equal to the size of the dispatch bundle
+
+// in DI, then dispatch all instructions from DI to the IQ.
+
+regRead(); // If RR contains a register-read bundle:
+
+// If DI is not empty (cannot accept a new dispatch bundle), then do
+
+// nothing. If DI is empty (can accept a new dispatch bundle), then
+
+// process (see below) the register-read bundle and advance it from RR
+
+// to DI.
+
+//
+
+// How to process the register-read bundle:
+
+// Since values are not explicitly modeled, the sole purpose of the
+
+// Register Read stage is to ascertain the readiness of the renamed
+
+// source operands. Apply your learning from the class lectures/notes
+
+// on this topic.
+
+//
+
+// Also take care that producers in their last cycle of execution
+
+// wakeup dependent operands not just in the IQ, but also in two other
+
+// stages including RegRead()(this is required to avoid deadlock). See
+
+// Execute() description above.
+
+rename(); // If RN contains a rename bundle:
+
+// If either RR is not empty (cannot accept a new register-read bundle)
+
+// or the ROB does not have enough free entries to accept the entire
+
+// rename bundle, then do nothing.
+
+// If RR is empty (can accept a new register-read bundle) and the ROB
+
+// has enough free entries to accept the entire rename bundle, then
+
+// process (see below) the rename bundle and advance it from RN to RR.
+
+//
+
+// How to process the rename bundle:
+
+// Apply your learning from the class lectures/notes on the steps for
+
+// renaming:
+
+// (1) Allocate an entry in the ROB for the instruction,
+
+// (2) Rename its source registers, and
+
+// (3) Rename its destination register (if it has one).
+
+// Note that the rename bundle must be renamed in program order.
+
+// Fortunately, the instructions in the rename bundle are in program
+
+// order).
+
+decode(); // If DE contains a decode bundle:
+
+// If RN is not empty (cannot accept a new rename bundle), then do
+
+// nothing. If RN is empty (can accept a new rename bundle), then
+
+// advance the decode bundle from DE to RN.
+
+fetch(); // Do nothing if either
+
+// (1) there are no more instructions in the trace file or
+
+// (2) DE is not empty (cannot accept a new decode bundle).
+
+//
+
+// If there are more instructions in the trace file and if DE is empty
+
+// (can accept a new decode bundle), then fetch up to WIDTH
+
+// instructions from the trace file into DE. Fewer than WIDTH
+
+// instructions will be fetched only if the trace file has fewer than
+
+// WIDTH instructions left.
+
+} while (advance_cycle());
+
+// advance_cycle() performs several functions.
+
+// (1) It advances the simulator cycle.
+
+// (2) When it becomes known that the pipeline is empty AND the trace
+
+// is depleted, the function returns “false” to terminate the loop.
